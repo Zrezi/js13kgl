@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        canvas {
+            margin: 0;
+            border: 0;
+            padding: 0;
+            display: block;
+            overflow: hidden;
+        }
+        
+        body {
+            background-color: black;
+        }
+        
+        #view {
+            /*
+            width: 100vw;
+            height: 100vh;
+            */
+            max-width: 800px;
+            max-height: 600px;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            -moz-transform: translate(-50%, -50%);
+            -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+        }
+    </style>
+    <!-- <script src="renderer.js"></script> -->
+    <script src="minrend.js"></script>
+    <title>Yeet</title>
+</head>
+
+<body>
+    <img id="img" style="display: none" src="alpha.png" crossOrigin="anonymous" />
+    <canvas id="view"></canvas>
+</body>
+<script defer>
+    const img = document.getElementById('img');
+    img.onload = () => {
+        // Get canvas element, where the scene will be rendered to.
+        const view = document.getElementById('view');
+
+        // Create a scene
+        const scene = Renderer(view);
+
+        // Set background color
+        scene.background(1, 1, 1);
+
+        // Create a texture
+        const atlas = scene.texture(img);
+
+        // Create a frame
+        const frame = atlas.frame(Vec2(), Vec2(32));
+
+        // Create a sprite
+        const sprite = Sprite(frame);
+
+        // Add a sprite to the scene
+        scene.add(sprite);
+
+
+        // const ParametricBlend = (t) => {
+        //     let square = t * t;
+        //     return square / (2.0 * (square - t) + 1.0);
+        // }
+        // const speed = 20;
+        // const amount = 100;
+        // let t = 50,
+        //     dir = 1;
+
+        document.body.onkeydown = e => {
+            scene.addFunction(Shake(1, 15, 5, 100));
+        }
+
+        const loop = () => {
+
+            // let offset = ParametricBlend(t / 100) / amount - (0.5 / amount);
+            // t = Math.floor(t + dir * speed);
+            // if (t <= 0 || t >= 100) {
+            //     dir *= -1;
+            // }
+            // scene.camera.to = Vec2(offset + 0.5, 0.5);
+
+            scene.render();
+            requestAnimationFrame(loop);
+        };
+
+        loop();
+    }
+</script>
+<!-- <script defer>
+    const img = document.getElementById('img');
+    img.onload = () => {
+        const {
+            Point,
+            Sprite
+        } = Renderer;
+
+        // Get canvas element, where the scene will be rendered to.
+        const view = document.getElementById('view');
+
+        // Create a scene
+        const scene = Renderer(view);
+
+        // Set background color
+        scene.background(0, 0, 0);
+
+        // Create a texture
+        const atlas = scene.texture(img);
+
+        // Create a frame
+        const frame = atlas.frame(new Point(), new Point(32), new Point(0.5));
+
+        // Create a sprite
+        const sprite = new Sprite(frame);
+        sprite.scale = new Point(2, 2);
+        sprite.alpha = 0.5;
+
+        // Add a sprite to the scene
+        scene.add(sprite);
+
+        x = 0;
+        y = 0;
+        const loop = () => {
+            // Get the actual canvas size
+            // scene.resize();
+
+            // Change sprite position
+            // scene.camera.at = new Point(x++, y++);
+            sprite.rotation += 0.01;
+
+            // Render a scene
+            scene.render();
+
+            requestAnimationFrame(loop);
+        };
+
+        loop();
+    }
+</script> -->
+
+</html>
