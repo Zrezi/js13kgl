@@ -247,11 +247,11 @@ const Renderer = (canvas, options) => {
     })();
 
     const draw = (sprite) => {
-        if (sprite.visible === false) {
+        if (sprite.visible == false) {
             return;
         }
 
-        if (count === maxBatch) {
+        if (count == maxBatch) {
             flush();
         }
 
@@ -283,11 +283,13 @@ const Renderer = (canvas, options) => {
     };
 
     const _Renderer = {
+        canvas,
         gl,
         camera: {
             at: Vec2(),
             to: Vec2(0.5),
-            angle: 0
+            angle: 0,
+            follow: null
         },
         glsl: {
             fade: 1
@@ -335,6 +337,10 @@ const Renderer = (canvas, options) => {
             onRenderFunctions.forEach(renderFunction => {
                 renderFunction.fn(this);
             });
+
+            if (this.camera.follow) {
+                this.camera.at = this.camera.follow.pos;
+            }
 
             const { at, to, angle } = this.camera;
             const x = at.x - width * to.x;
@@ -433,4 +439,33 @@ const Fade = function(framesToFade, shouldFadeIn, onComplete) {
             frameCount++;
         }
     })();
-}
+};
+
+const MouseCamera = (renderer, _options) => {
+    let canvas = renderer.canvas;
+    let options = _options || {};
+    let speed = options.speed || 1;
+    let buttons = options.buttons || 1;
+    let dragging = false;
+    let clickX, clickY, dx, dy;
+    canvas.onmousemove = (mouseEvent) => {
+        if (dragging) {
+            let { x, y } = renderer.camera.at;
+            dx = (clickX - mouseEvent.offsetX) * speed;
+            dy = (clickY - mouseEvent.offsetY) * speed;
+            renderer.camera.at = Vec2(x + dx, y + dy);
+            clickX = mouseEvent.offsetX;
+            clickY = mouseEvent.offsetY;
+        }
+    }
+    canvas.onmousedown = (mouseEvent) => {
+        if (mouseEvent.buttons & buttons) {
+            dragging = true;
+            clickX = mouseEvent.offsetX;
+            clickY = mouseEvent.offsetY;;
+        }
+    }
+    canvas.onmouseup = (mouseEvent) => {
+        dragging = false;
+    }
+};
