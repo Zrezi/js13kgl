@@ -22,6 +22,7 @@ const GL_TEXTURE_2D = 3553;
 const GL_NEAREST = 9728;
 const GL_TEXTURE_MAG_FILTER = 10240;
 const GL_TEXTURE_MIN_FILTER = 10241;
+const rand = Math.random;
 
 const maxBatch = 65535;
 let depth = 1e5;
@@ -51,11 +52,12 @@ gl_Position=m*vec4(p,z,1);}`;
 const fragmentShaderSource = `precision mediump float;
 uniform sampler2D x;
 uniform float j;
+uniform float f;
 varying vec2 v;
 varying vec4 i;
 void main(){
 vec4 c=texture2D(x,v);
-gl_FragColor=c*i;
+gl_FragColor=c*i*vec4(f,f,f,f);
 if(j>0.0){
 if(c.a<j)discard;
 gl_FragColor.a=1.0;};}`;
@@ -200,6 +202,7 @@ const Renderer = (canvas, options) => {
     const getUniformLocation = name => gl.getUniformLocation(shaderProgram, name);
     const matrixLocation = getUniformLocation('m');
     const textureLocation = getUniformLocation('x');
+    const fadeLocation = getUniformLocation('f');
     const alphaTestLocation = getUniformLocation('j');
 
     let width;
@@ -286,6 +289,9 @@ const Renderer = (canvas, options) => {
             to: Vec2(0.5),
             angle: 0
         },
+        glsl: {
+            fade: 1
+        },
         background: (r, g, b, a) => { gl.clearColor(r, g, b, a === 0 ? 0 : (a || 1)) },
         add: (sprite) => zeroLayer.add(sprite),
         texture: (src, alpha, smooth, mipmap) => {
@@ -353,6 +359,7 @@ const Renderer = (canvas, options) => {
             gl.enable(GL_DEPTH_TEST);
 
             gl.uniformMatrix4fv(matrixLocation, false, projection);
+            gl.uniform1f(fadeLocation, this.glsl.fade);
             gl.viewport(0, 0, width, height);
             gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -375,19 +382,19 @@ const Renderer = (canvas, options) => {
     return _Renderer;
 };
 
-const Shake = function(times, speed, amountStart, amountEnd) {
+const Shake = function(times, speed, amountStart, amountEnd, onComplete) {
     return (() => {
         let count = 0,
             t = 50,
-            dir = 1,
+            dir = rand() < 0.5 ? 1 : -1,
             steps = [],
             offset,
             stepAmount,
-            i;
-        const ParametricBlend = (t) => {
-            square = t * t;
-            return square / (2.0 * (square - t) + 1.0);
-        }
+            i,
+            _blend = (t) => {
+                square = t * t;
+                return square / (2.0 * (square - t) + 1.0);
+            }
         if (amountEnd) {
             stepAmount = (amountEnd - amountStart) / (times * 5);
             for (i = 0; i < times * 5 + 1; i++) {
@@ -403,11 +410,27 @@ const Shake = function(times, speed, amountStart, amountEnd) {
                 dir *= -1;
                 count++;
             }
-            offset = ParametricBlend(t / 100) / amountStart - (0.5 / amountStart);
+            offset = _blend(t / 100) / amountStart - (0.5 / amountStart);
             if (count == times * 5 && !offset) {
                 this.remove();
+                if (onComplete) onComplete();
             }
             renderer.camera.to = Vec2(offset + 0.5, 0.5);
         }
     })()
 };
+
+const Fade = function(framesToFade, shouldFadeIn, onComplete) {
+    return (() => {
+        let fadeAmountPerFrame = 1.0 / framesToFade,
+            frameCount = 0;
+        return function(renderer) {
+            renderer.glsl.fade = +shouldFadeIn ? fadeAmountPerFrame * frameCount : 1 - (fadeAmountPerFrame * frameCount);
+            if (frameCount > framesToFade) {
+                this.remove();
+                if (onComplete) onComplete();
+            }
+            frameCount++;
+        }
+    })();
+}
