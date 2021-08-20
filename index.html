@@ -61,6 +61,8 @@
             }
         }
 
+        let spriteGroup = SpriteGroup([sprite]);
+
         let x = 0;
         let dir = 1;
         let boundaryX = 400 - 32
@@ -69,7 +71,8 @@
             if (x < -boundaryX || x > boundaryX) {
                 dir *= -1;
             }
-            sprite.pos = Vec2(x, 0);
+            // sprite.pos = Vec2(x, 0);
+            spriteGroup.set(x, 0);
             scene.render();
             requestAnimationFrame(loop);
         };

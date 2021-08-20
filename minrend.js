@@ -100,7 +100,14 @@ const List = () => {
 };
 
 const Vec2 = (x, y) => {
-    return { x: +x || 0, y: +y == 0 ? 0 : +y || +x || 0 };
+    return {
+        x: +x || 0,
+        y: +y == 0 ? 0 : +y || +x || 0,
+        add: function(x, y) {
+            this.x += x;
+            this.y += y;
+        }
+    };
 };
 
 const Sprite = (frame, properties) => {
@@ -122,6 +129,22 @@ const Sprite = (frame, properties) => {
     }
     return sprite;
 }
+
+const SpriteGroup = (sprites) => {
+    return {
+        array: sprites,
+        move: function(x, y) {
+            this.array.forEach(sprite => {
+                sprite.pos.add(x, y);
+            });
+        },
+        set: function(x, y) {
+            this.array.forEach(sprite => {
+                sprite.pos = Vec2(x, y);
+            });
+        }
+    };
+};
 
 const Layer = (zIndex) => {
     let layer = {
@@ -465,7 +488,7 @@ const MouseCamera = (renderer, _options) => {
             clickY = mouseEvent.offsetY;;
         }
     }
-    canvas.onmouseup = (mouseEvent) => {
+    canvas.onmouseup = (_) => {
         dragging = false;
     }
 };
